@@ -24,23 +24,34 @@ type Task struct {
 	Schedule
 	Func   FunctionMeta
 	Params []Param
+	hash ID
 }
 
 // New returns an instance of task
-func New(function FunctionMeta, params []Param) *Task {
-	return &Task{
+// add duration and time to params
+func New(duration time.Duration,nextRun time.Time,function FunctionMeta, params []Param,) *Task {
+	schedule := Schedule{
+		Duration:duration,
+		NextRun:nextRun,
+	}
+	task := &Task{
 		Func:   function,
 		Params: params,
+		Schedule: schedule,
 	}
+	task.setHash(task.generateHash())
+	return task
 }
 
 // NewWithSchedule creates an instance of task with the provided schedule information
-func NewWithSchedule(function FunctionMeta, params []Param, schedule Schedule) *Task {
-	return &Task{
-		Func:     function,
-		Params:   params,
+func NewWithSchedule(function FunctionMeta, params []Param,hash string, schedule Schedule) *Task {
+	task := &Task{
+		Func:   function,
+		Params: params,
 		Schedule: schedule,
 	}
+	task.setHash(ID(hash))
+	return task
 }
 
 // IsDue returns a boolean indicating whether the task should execute or not
@@ -65,13 +76,22 @@ func (task *Task) Run() {
 }
 
 // Hash will return the SHA1 representation of the task's data.
-func (task *Task) Hash() ID {
+func (task *Task) setHash(hash ID)  {
+	task.hash = hash
+}
+
+func (task Task) generateHash() ID {
 	hash := sha1.New()
 	_, _ = io.WriteString(hash, task.Func.Name)
 	_, _ = io.WriteString(hash, fmt.Sprintf("%+v", task.Params))
 	_, _ = io.WriteString(hash, fmt.Sprintf("%s", task.Schedule.Duration))
+	_, _ = io.WriteString(hash, fmt.Sprintf("%s", task.Schedule.NextRun))
 	_, _ = io.WriteString(hash, fmt.Sprintf("%t", task.Schedule.IsRecurring))
 	return ID(fmt.Sprintf("%x", hash.Sum(nil)))
+}
+
+func (task Task) GetHash() ID{
+	return task.hash
 }
 
 func (task *Task) scheduleNextRun() {

@@ -90,7 +90,7 @@ func (postgres *postgresStorage) Add(task TaskAttributes) error {
 func (postgres *postgresStorage) Fetch() ([]TaskAttributes, error) {
 	// read all the rows task_store table.
 	rows, err := postgres.db.Query(`
-        SELECT name, params, duration, last_run, next_run, is_recurring
+        SELECT name, params, duration, last_run, next_run, is_recurring,hash
         FROM task_store ;`)
 
 	if err != nil {
@@ -104,7 +104,7 @@ func (postgres *postgresStorage) Fetch() ([]TaskAttributes, error) {
 	for rows.Next() {
 		// var task TaskAttributes
 		task := TaskAttributes{}
-		err = rows.Scan(&task.Name, &task.Params, &task.Duration, &task.LastRun, &task.NextRun, &task.IsRecurring)
+		err = rows.Scan(&task.Name, &task.Params, &task.Duration, &task.LastRun, &task.NextRun, &task.IsRecurring,&task.Hash)
 		if err != nil {
 			return []TaskAttributes{}, err
 		}
@@ -118,7 +118,7 @@ func (postgres *postgresStorage) Fetch() ([]TaskAttributes, error) {
 }
 
 func (postgres *postgresStorage) Remove(task TaskAttributes) error {
-	// should delete the entry from `task_stor` table.
+	// should delete the entry from `task_store` table.
 	stmt, err := postgres.db.Prepare(`DELETE FROM task_store WHERE hash=($1) ;`)
 
 	if err != nil {

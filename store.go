@@ -61,7 +61,7 @@ func (sb *storeBridge) Fetch() ([]*task.Task, error) {
 			return nil, err
 		}
 
-		t := task.NewWithSchedule(funcMeta, params, task.Schedule{
+		t := task.NewWithSchedule(funcMeta, params, storedTask.Hash, task.Schedule{
 			IsRecurring: isRecurring == 1,
 			Duration:    time.Duration(duration),
 			LastRun:     lastRun,
@@ -92,7 +92,7 @@ func (sb *storeBridge) getTaskAttributes(task *task.Task) (storage.TaskAttribute
 	}
 
 	return storage.TaskAttributes{
-		Hash:        string(task.Hash()),
+		Hash:        string(task.GetHash()),
 		Name:        task.Func.Name,
 		LastRun:     task.LastRun.Format(time.RFC3339),
 		NextRun:     task.NextRun.Format(time.RFC3339),

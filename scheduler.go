@@ -45,12 +45,12 @@ func (scheduler *Scheduler) RunAt(time time.Time, function task.Function, params
 		return "", err
 	}
 
-	task := task.New(funcMeta, params)
+	task := task.New(0,time,funcMeta, params)
 
-	task.NextRun = time
+	// task.NextRun = time
 
 	scheduler.registerTask(task)
-	return task.Hash(), nil
+	return task.GetHash(), nil
 }
 
 // RunAfter executes function once after a specific duration has elapsed.
@@ -65,14 +65,14 @@ func (scheduler *Scheduler) RunEvery(duration time.Duration, function task.Funct
 		return "", err
 	}
 
-	task := task.New(funcMeta, params)
+	task := task.New(duration,time.Now().Add(duration),funcMeta, params)
 
 	task.IsRecurring = true
-	task.Duration = duration
-	task.NextRun = time.Now().Add(duration)
+	// task.Duration = duration
+	// task.NextRun = time.Now().Add(duration)
 
 	scheduler.registerTask(task)
-	return task.Hash(), nil
+	return task.GetHash(), nil
 }
 
 // Start will run the scheduler's timer and will trigger the execution
@@ -85,9 +85,9 @@ func (scheduler *Scheduler) Start() error {
 	if err := scheduler.populateTasks(); err != nil {
 		return err
 	}
-	if err := scheduler.persistRegisteredTasks(); err != nil {
-		return err
-	}
+	// if err := scheduler.persistRegisteredTasks(); err != nil {
+	// 	return err
+	// }
 	scheduler.runPending()
 
 	go func() {
@@ -158,23 +158,23 @@ func (scheduler *Scheduler) populateTasks() error {
 		// If the task instance is still registered with the same computed hash then move on.
 		// Otherwise, one of the attributes changed and therefore, the task instance should
 		// be added to the list of tasks to be executed with the stored params
-		registeredTask, ok := scheduler.tasks[dbTask.Hash()]
+		registeredTask, ok := scheduler.tasks[dbTask.GetHash()]
 		if !ok {
-			log.Printf("Detected a change in attributes of one of the instances of task %s, \n",
+			log.Printf("Detected an old task in Store, adding back to instances of inmemory task-map %s, \n",
 				dbTask.Func.Name)
 			dbTask.Func, _ = scheduler.funcRegistry.Get(dbTask.Func.Name)
 			registeredTask = dbTask
-			scheduler.tasks[dbTask.Hash()] = registeredTask
+			scheduler.tasks[dbTask.GetHash()] = registeredTask
 		}
 
 		// Skip task which is not a recurring one and the NextRun has already passed
-		if !dbTask.IsRecurring && dbTask.NextRun.Before(time.Now()) {
-			// We might have a task instance which was executed already.
-			// In this case, delete it.
-			_ = scheduler.taskStore.Remove(dbTask)
-			delete(scheduler.tasks, dbTask.Hash())
-			continue
-		}
+		// if !dbTask.IsRecurring && dbTask.NextRun.Before(time.Now()) {
+		// 	// We might have a task instance which was executed already.
+		// 	// In this case, delete it.
+		// 	_ = scheduler.taskStore.Remove(dbTask)
+		// 	delete(scheduler.tasks, dbTask.GetHash())
+		// 	continue
+		// }
 
 		// Duration may have changed for recurring tasks
 		if dbTask.IsRecurring && registeredTask.Duration != dbTask.Duration {
@@ -196,13 +196,16 @@ func (scheduler *Scheduler) persistRegisteredTasks() error {
 }
 
 func (scheduler *Scheduler) runPending() {
+	// if err := scheduler.populateTasks(); err != nil {
+	// 	fmt.Printf("couldn't refresh tasks from store : %s \n",err.Error())
+	// }
 	for _, task := range scheduler.tasks {
 		if task.IsDue() {
 			go task.Run()
 
 			if !task.IsRecurring {
 				_ = scheduler.taskStore.Remove(task)
-				delete(scheduler.tasks, task.Hash())
+				delete(scheduler.tasks, task.GetHash())
 			}
 		}
 	}
@@ -210,5 +213,9 @@ func (scheduler *Scheduler) runPending() {
 
 func (scheduler *Scheduler) registerTask(task *task.Task) {
 	_, _ = scheduler.funcRegistry.Add(task.Func)
-	scheduler.tasks[task.Hash()] = task
+	if err := scheduler.taskStore.Add(task); err != nil{
+		fmt.Printf("couldn't add it to store : %s \n",err.Error())
+	}else {
+		scheduler.tasks[task.GetHash()] = task
+	}
 }

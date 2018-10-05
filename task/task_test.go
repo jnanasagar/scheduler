@@ -72,7 +72,7 @@ func TestGenerateHash(t *testing.T) {
 	task.IsRecurring = true
 	task.NextRun = time.Now()
 	task.Duration = 5 * time.Second
-	hash := task.Hash()
+	hash := task.GetHash()
 
 	if hash == "" {
 		t.Fail()

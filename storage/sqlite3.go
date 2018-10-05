@@ -106,7 +106,7 @@ func (sqlite Sqlite3Storage) Remove(task TaskAttributes) error {
 // Fetch will return the list of all stored tasks.
 func (sqlite Sqlite3Storage) Fetch() ([]TaskAttributes, error) {
 	rows, err := sqlite.db.Query(`
-        SELECT name, params, duration, last_run, next_run, is_recurring
+        SELECT name, params, duration, last_run, next_run, is_recurring,hash
         FROM task_store`)
 
 	if err != nil {
@@ -118,8 +118,8 @@ func (sqlite Sqlite3Storage) Fetch() ([]TaskAttributes, error) {
 	var tasks []TaskAttributes
 
 	for rows.Next() {
-		var name, params, lastRun, nextRun, duration, isRecurring string
-		err = rows.Scan(&name, &params, &duration, &lastRun, &nextRun, &isRecurring)
+		var name, params, lastRun, nextRun, duration, isRecurring, hash string
+		err = rows.Scan(&name, &params, &duration, &lastRun, &nextRun, &isRecurring,&hash)
 		if err != nil {
 			return []TaskAttributes{}, err
 		}
@@ -131,6 +131,7 @@ func (sqlite Sqlite3Storage) Fetch() ([]TaskAttributes, error) {
 			NextRun:     nextRun,
 			Duration:    string(duration),
 			IsRecurring: string(isRecurring),
+			Hash:hash,
 		}
 
 		tasks = append(tasks, task)
