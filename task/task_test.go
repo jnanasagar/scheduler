@@ -84,7 +84,7 @@ func newTestTask(t *testing.T, function Function, params []Param) *Task {
 	if err != nil {
 		t.Error("Failed to register function")
 	}
-	return New(funcMeta, params)
+	return New(0,time.Now(),funcMeta, params)
 }
 
 func newTestTaskWithSchedule(t *testing.T, function Function, params []Param, schedule Schedule) *Task {
@@ -92,5 +92,5 @@ func newTestTaskWithSchedule(t *testing.T, function Function, params []Param, sc
 	if err != nil {
 		t.Error("Failed to register function")
 	}
-	return NewWithSchedule(funcMeta, params, schedule)
+	return NewWithSchedule(funcMeta, params,"testing", schedule)
 }

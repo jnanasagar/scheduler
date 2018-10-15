@@ -68,8 +68,6 @@ func (scheduler *Scheduler) RunEvery(duration time.Duration, function task.Funct
 	task := task.New(duration,time.Now().Add(duration),funcMeta, params)
 
 	task.IsRecurring = true
-	// task.Duration = duration
-	// task.NextRun = time.Now().Add(duration)
 
 	scheduler.registerTask(task)
 	return task.GetHash(), nil
@@ -85,9 +83,6 @@ func (scheduler *Scheduler) Start() error {
 	if err := scheduler.populateTasks(); err != nil {
 		return err
 	}
-	// if err := scheduler.persistRegisteredTasks(); err != nil {
-	// 	return err
-	// }
 	scheduler.runPending()
 
 	go func() {
@@ -166,15 +161,6 @@ func (scheduler *Scheduler) populateTasks() error {
 			registeredTask = dbTask
 			scheduler.tasks[dbTask.GetHash()] = registeredTask
 		}
-
-		// Skip task which is not a recurring one and the NextRun has already passed
-		// if !dbTask.IsRecurring && dbTask.NextRun.Before(time.Now()) {
-		// 	// We might have a task instance which was executed already.
-		// 	// In this case, delete it.
-		// 	_ = scheduler.taskStore.Remove(dbTask)
-		// 	delete(scheduler.tasks, dbTask.GetHash())
-		// 	continue
-		// }
 
 		// Duration may have changed for recurring tasks
 		if dbTask.IsRecurring && registeredTask.Duration != dbTask.Duration {

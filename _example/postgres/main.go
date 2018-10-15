@@ -57,20 +57,20 @@ func main() {
 		s.Stop()
 	}(s, store)
 	// Start a task without arguments
-	if taskId, err := s.RunAfter(5*time.Second, test.TaskWithoutArgs); err != nil {
-		log.Fatal(err)
-	}else {
-		log.Printf("submitted task: %s", taskId)
-	}
+	// if taskId, err := s.RunAfter(5*time.Second, test.TaskWithoutArgs); err != nil {
+	// 	log.Fatal(err)
+	// }else {
+	// 	log.Printf("submitted task: %s", taskId)
+	// }
 	// Start a task with arguments
-	// if _, err := s.RunEvery(5*time.Second, TaskWithArgs, "Hello from recurring task 1"); err != nil {
-	// 	log.Fatal(err)
-	// }
-	//
-	// // Start the same task as above with a different argument
-	// if _, err := s.RunEvery(10*time.Second, TaskWithArgs, "Hello from recurring task 2"); err != nil {
-	// 	log.Fatal(err)
-	// }
+	if _, err := s.RunEvery(5*time.Second, TaskWithArgs, "Hello from recurring task 1"); err != nil {
+		log.Fatal(err)
+	}
+
+	// Start the same task as above with a different argument
+	if _, err := s.RunEvery(10*time.Second, TaskWithArgs, "Hello from recurring task 2"); err != nil {
+		log.Fatal(err)
+	}
 	// defer s.Stop()
 	// time.Sleep(10*time.Second)
 	s.Start()

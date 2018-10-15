@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"testing"
+	"time"
 
 	"github.com/rakanalh/scheduler/storage"
 	"github.com/rakanalh/scheduler/task"
@@ -169,7 +170,7 @@ func newTask(funcRegistry *task.FuncRegistry, function task.Function, params ...
 		return nil
 	}
 
-	task := task.New(funcMeta, params)
+	task := task.New(0,time.Now().Add(10*time.Second),funcMeta, params)
 	_, _ = funcRegistry.Add(task.Func)
 
 	return task
